@@ -30,11 +30,29 @@ table th {
 
 .oikealle{
 	text-align: right;	
-	
 }
 
 #uusiAsiakas, #takaisin{
 	color: white;	
 	cursor: pointer;	
+}
+
+#linkki{
+	color: white;	
+	text-decoration: none;
+}
+#loginDiv{
+	position: absolute;
+	border: 1px solid;
+	padding: 20px;
+	border-radius: 10px;
+	left: 35%;
+	top: 10%;
+	background-color: white;
+}
+label {
+	display: block;
+	width: 5em;
+	float: left;
 }
 

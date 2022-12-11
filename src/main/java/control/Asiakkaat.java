@@ -28,31 +28,33 @@ public class Asiakkaat extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Asiakkaat.doGet()");
 		String hakusana = request.getParameter("hakusana");
-		String id = request.getParameter("id"); // id vai asiakas_id ?
-		String strJSON = ""; // tÃ¤stÃ¤ se unexc. end of JSON file - error tulee tod.nÃ¤k
+		String asiakas_id = request.getParameter("asiakas_id");
+		String strJSON = "";
 		Dao dao = new Dao();
 		ArrayList<Asiakas> asiakkaat = dao.getAllItems();
-		
 		if(hakusana!=null) {//Jos kutsun mukana tuli hakusana
-			if(!hakusana.equals("")) {//Jos hakusana ei ole tyhjï¿½
+			if(!hakusana.equals("")) {//Jos hakusana ei ole tyhjä
 				asiakkaat = dao.getAllItems(hakusana); //Haetaan kaikki hakusanan mukaiset autot							
 			}else {
-				asiakkaat = dao.getAllItems(); //Haetaan kaikki autot
+				asiakkaat = dao.getAllItems(); //Haetaan kaikki asiakkaat
 			}
 			strJSON = new Gson().toJson(asiakkaat);	
-		}else if(id!=null) {
-			Asiakas asiakas = dao.getItem(Integer.parseInt(id));
+		}else if(asiakas_id!=null) {
+			Asiakas asiakas = dao.getItem(Integer.parseInt(asiakas_id));
 			strJSON = new Gson().toJson(asiakas);
-		}
+		}else {
+			asiakkaat = dao.getAllItems(); //Haetaan kaikki asiakkaat
+			strJSON = new Gson().toJson(asiakkaat);	
+		}	
 		response.setContentType("application/json; charset=UTF-8");
 		PrintWriter out = response.getWriter();
 		out.println(strJSON);		
 	}
 	
-	//Lisï¿½ys
+	//Lisäys
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Asiakkaat.doPost()");
-		//Luetaan JSON-tiedot POST-pyynnï¿½n bodysta ja luodaan niiden perusteella uusi asiakas		
+		//Luetaan JSON-tiedot POST-pyynnön bodysta ja luodaan niiden perusteella uusi asiakas		
 		String strJSONInput = request.getReader().lines().collect(Collectors.joining());
 		//System.out.println(strJSONInput);
 		Asiakas asiakas = new Gson().fromJson(strJSONInput, Asiakas.class);	
@@ -61,27 +63,29 @@ public class Asiakkaat extends HttpServlet {
 		response.setContentType("application/json; charset=UTF-8");
 		PrintWriter out = response.getWriter();
 		if(dao.addItem(asiakas)) {
-			out.println("{\"response\":1}");  //Auton lisï¿½ï¿½minen onnistui {"response":1}
+			out.println("{\"response\":1}");  //Auton lisääminen onnistui {"response":1}
 		}else {
-			out.println("{\"response\":0}");  //Auton lisï¿½ï¿½minen epï¿½onnistui {"response":0}
+			out.println("{\"response\":0}");  //Auton lisääminen epäonnistui {"response":0}
 		}		
 	}
 	
 	//Muutos
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		System.out.println("Asiakkaat.doPut()");
+		//Luetaan JSON-tiedot POST-pyynnön bodysta ja luodaan niiden perusteella uusi asiakas		
 		String strJSONInput = request.getReader().lines().collect(Collectors.joining());
-		Asiakas asiakas = new Gson().fromJson(strJSONInput, Asiakas.class);
+		//System.out.println(strJSONInput);
+		Asiakas asiakas = new Gson().fromJson(strJSONInput, Asiakas.class);	
+		//System.out.println(asiakas);
+		Dao dao = new Dao();
 		response.setContentType("application/json; charset=UTF-8");
 		PrintWriter out = response.getWriter();
-		Dao dao = new Dao();
 		if(dao.changeItem(asiakas)) {
-			out.println("{\response\":1}");
-		} else {
-			out.println("{\response\":0}");
-		}	
+			out.println("{\"response\":1}");  //Auton lisääminen onnistui {"response":1}
+		}else {
+			out.println("{\"response\":0}");  //Auton lisääminen epäonnistui {"response":0}
+		}		
 	}
-
 	
 	//Poisto
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -93,7 +97,7 @@ public class Asiakkaat extends HttpServlet {
 		if(dao.removeItem(asiakas_id)){ //metodi palauttaa true/false
 			out.println("{\"response\":1}"); //Asiakkaan poisto onnistui {"response":1}
 		}else {
-			out.println("{\"response\":0}"); //Asiakkaan poisto epï¿½onnistui {"response":0}
+			out.println("{\"response\":0}"); //Asiakkaan poisto epäonnistui {"response":0}
 		}	
 	}
 

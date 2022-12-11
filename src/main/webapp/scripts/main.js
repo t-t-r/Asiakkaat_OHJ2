@@ -6,11 +6,23 @@ function serialize_form(form){
 	        );	
 } 
 
+//funktio arvon lukemiseen urlista avaimen perusteella
+function requestURLParam(sParam){
+    let sPageURL = window.location.search.substring(1);
+    let sURLVariables = sPageURL.split("&");
+    for (let i = 0; i < sURLVariables.length; i++){
+        let sParameterName = sURLVariables[i].split("=");
+        if(sParameterName[0] == sParam){
+            return sParameterName[1];
+        }
+    }
+}
+
 function haeAsiakkaat(){
 	let url = "asiakkaat?hakusana=" + document.getElementById("hakusana").value; 
 	let requestOptions = {
         method: "GET",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" }       
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" }       
     };    
     fetch(url, requestOptions)
     .then(response => response.json())//Muutetaan vastausteksti JSON-objektiksi 
@@ -28,7 +40,7 @@ function printItems(respObjList){
     	htmlStr+="<td>"+item.sukunimi+"</td>";
     	htmlStr+="<td>"+item.puhelin+"</td>";
     	htmlStr+="<td>"+item.sposti+"</td>"; 
-    	htmlStr+="<td><a href='muutaasiakas.jsp?id="+item.asiakas_id+"'>Muuta</a>&nbsp;"; 
+   		htmlStr+="<td><a href='muutaasiakas.jsp?id="+item.asiakas_id+"'>Muuta</a>&nbsp;";
 		htmlStr+="<span class='poista' onclick=varmistaPoisto("+item.asiakas_id+",'"+encodeURI(item.etunimi + " " + item.sukunimi)+"')>Poista</span></td>"; //encodeURI() muutetaan erikoismerkit, välilyönnit jne. UTF-8 merkeiksi.	
     	htmlStr+="</tr>";    	
 	}	
@@ -42,12 +54,13 @@ function tutkiJaLisaa(){
 	}
 }
 
-function tutkiJaPaivita() {
-	if(tutkiTiedot()) {
+//Tutkitaan päivitettävät tiedot ennen niiden lähettämistä backendiin
+function tutkiJaPaivita(){
+	if(tutkiTiedot()){
 		paivitaTiedot();
 	}
-	
 }
+
 //funktio syöttötietojen tarkistamista varten (yksinkertainen)
 function tutkiTiedot(){
 	let ilmo="";	
@@ -139,51 +152,60 @@ function poistaAsiakas(asiakas_id, nimi){
    	.catch(errorText => console.error("Fetch failed: " + errorText));
 }	
 
-function reURLPara(sParam) {
-	let sPageURL = window.location.search.substring(1);
-	let sURLVariables = sPageURL.split("&");
-	for (let i = 0; i < sURLVariables.length; i++) {
-		let sParameterName = sURLVariables[i].split("=");
-		if(sParameterName[0] == sParam) {
-			return sParameterName[1];
+//Haetaan muutettavan asiakkaan tiedot. Kutsutaan backin GET-metodia ja välitetään kutsun mukana muutettavan tiedon id
+function haeAsiakas() {		
+    let url = "asiakkaat?asiakas_id=" + requestURLParam("id"); //requestURLParam() on funktio, jolla voidaan hakea urlista arvo avaimen perusteella. Löytyy main.js -tiedostosta 	
+	//console.log(url);
+    let requestOptions = {
+        method: "GET",
+        headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" }       
+    };    
+    fetch(url, requestOptions)
+    .then(response => response.json())//Muutetaan vastausteksti JSON-objektiksi
+   	.then(response => {
+   		//console.log(response);
+   		document.getElementById("asiakas_id").value=response.asiakas_id;
+   		document.getElementById("etunimi").value=response.etunimi;
+   		document.getElementById("sukunimi").value=response.sukunimi;
+   		document.getElementById("puhelin").value=response.puhelin;
+   		document.getElementById("sposti").value=response.sposti;
+   	}) 
+   	.catch(errorText => console.error("Fetch failed: " + errorText));
+}	
+
+function paivitaTiedot(){
+	let formData = serialize_form(document.lomake); //Haetaan tiedot lomakkeelta ja muutetaan JSON-stringiksi
+	//formData=encodeURI(formData);
+	console.log(formData);
+	let url = "asiakkaat";    
+    let requestOptions = {
+        method: "PUT", //Lisätään asiakas
+        headers: { "Content-Type": "application/json; charset=UTF-8" },  //charset=UTF-8 hoitaa skandinaaviset merkit oikein backendiin
+    	body: formData
+    };    
+    fetch(url, requestOptions)
+    .then(response => response.json())//Muutetaan vastausteksti JSON-objektiksi
+   	.then(responseObj => {	
+   		//console.log(responseObj);
+   		if(responseObj.response==0){
+   			document.getElementById("ilmo").innerHTML = "Asiakkaan päivitys epäonnistui.";	
+        }else if(responseObj.response==1){ 
+        	document.getElementById("ilmo").innerHTML = "Asiakkaan päivitys onnistui.";
+			document.lomake.reset(); //Tyhjennetään lisäämisen lomake		        	
 		}
-	}
+		setTimeout(function(){ document.getElementById("ilmo").innerHTML=""; }, 3000);
+   	})
+   	.catch(errorText => console.error("Fetch failed: " + errorText));
 }
 
-function haeAsiakas() {
-	let url ="asiakkaat?id=" + reURLPara("id"); // parametri on id
-	let requestOptions = {
-		method: "GET",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" }
-	};
-	fetch(url, requestOptions)
-	.then(response => response.json())
-	.then(response => {
-		document.getElementById("id").value=response.asiakas_id;
-		document.getElementById("etunimi").value=response.etunimi;
-		document.getElementById("sukunimi").value=response.sukunimi;
-		document.getElementById("puhelin").value=response.puhelin;
-		document.getElementById("sposti").value=response.sposti;
-	})
-	.catch(errorText => console.error("Fetch failed: " + errorText)); //json on tyhjä? tulee erroriksi en pääse eteenpäin
-}
-function paivitaTiedot() {
-	let formData = serialize_form(lomake);
-	let url = "asiakkaat";
-	let requestOptions = {
-			method: "PUT",
-			headers: { "Content-Type": "application/json; charset=UTF-8" },
-			body: formData
-	};
-	fetch(url, requestOptions)
-	.then(response => response.json())
-	.then(responseObj => {
-		if(responseObj.response==0) {
-			document.getElementById("ilmo").innerHTML = "Muutos epäonnistui";
-		} else if (responseObj.response==1) {
-			document.getElementById("ilmo").innerHTML = "Muutos onnistui";
-			document.lomake.reset();
-		}
-		})
-	.catch(errorText => console.error("Fetch failed: " + errorText));
-}
+
+
+
+
+
+
+
+
+
+
+

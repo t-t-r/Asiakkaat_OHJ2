@@ -1,3 +1,4 @@
+<%@include file="header.jsp" %>
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
@@ -5,7 +6,7 @@
 <meta charset="UTF-8">
 <script src="scripts/main.js"></script>
 <link rel="stylesheet" type="text/css" href="css/main.css">
-<title>Asiakkaan tietojen muuttaminen</title>
+<title>Asiakkaan lisäys</title>
 </head>
 <body>
 <form name="lomake">
@@ -28,13 +29,15 @@
 				<td><input type="text" name="sukunimi" id="sukunimi" /></td>
 				<td><input type="text" name="puhelin" id="puhelin" /></td>
 				<td><input type="text" name="sposti" id="sposti" /></td> 
-				<td><input type="button" id="tallenna" value="Hyväksy" onclick="tutkiJaPaivita()" /></td>
+				<td><input type="button" value="Hyväksy" onclick="tutkiJaPaivita()" /></td>
 			</tr>
-		</tbody>
+		</tbody>		
 	</table>
-	<input type="hidden" name="id" id="id">
+	<input type="hidden" name="asiakas_id" id="asiakas_id">
 </form>
-<span id="ilmo"></span>
+<p id="ilmo"></p>
+<script>
+haeAsiakas();
+</script>
 </body>
-<script>haeAsiakas();</script>
 </html>
